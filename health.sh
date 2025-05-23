@@ -181,7 +181,7 @@ while true; do
   # Send a simple GET request. Don't care about the output.
   curl http://localhost:8000/ > /dev/null 2>&1
   echo "Keep-alive request sent. Sleeping for 30 minutes."
-  sleep 1800 # Sleep for 30 minutes (30 * 60 = 1800 seconds)
+  sleep 7200 # Sleep for 2 hours (2 * 60 * 60 = 7200 seconds)
 done
 
 # The script will ideally never reach here because of the infinite loop.
