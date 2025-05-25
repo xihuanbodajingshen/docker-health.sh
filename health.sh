@@ -372,8 +372,7 @@ sync_data() {
     done
 }
 
-# 启动同步进程
-sync_data 
+
 
 cd /home/node/app
 
@@ -563,3 +562,5 @@ done
 # we might want to handle that. For now, the health check loop includes
 # a check if the node process is still alive.
 wait $NODE_PID # Wait for the node process if the loop ever exits (unlikely)
+# 启动同步进程
+sync_data 
