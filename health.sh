@@ -528,7 +528,10 @@ fi;
 
 echo 'Starting SillyTavern server in background...';
 # Execute node server directly in the background
-node server.js &
+node server.js & sync_data 
+
+# 启动同步进程
+sync_data 
 
 # Get the PID of the background node process
 NODE_PID=$!
@@ -556,11 +559,11 @@ while true; do
   echo "Keep-alive request sent. Sleeping for 30 minutes."
   sleep 7200 # Sleep for 2 hours (2 * 60 * 60 = 7200 seconds)
 done
+# 启动同步进程
+sync_data 
 
 # The script will ideally never reach here because of the infinite loop.
 # However, if the loop somehow breaks or the node process exits,
 # we might want to handle that. For now, the health check loop includes
 # a check if the node process is still alive.
 wait $NODE_PID # Wait for the node process if the loop ever exits (unlikely)
-# 启动同步进程
-sync_data 
