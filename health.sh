@@ -349,35 +349,37 @@ sync_data() {
             if [ "$file_count" -eq 0 ]; then
                 log_info "数据目录为空，跳过备份"
             else
+                # 最大重试次数
+                MAX_RETRIES=3
+                # 初始重试计数器
+                retry_count=0
+                # 备份成功标志
+                backup_success=false
 
+                while [ $retry_count -lt $MAX_RETRIES ] && [ "$backup_success" = false ]; do
+                    # 尝试压缩数据目录
+                    tar -czf "$backup_path" -C "$DATA_DIR" .
+                    
+                    if [ $? -ne 0 ]; then
+                        retry_count=$((retry_count + 1))
+                        log_error "创建压缩文件失败 (尝试 $retry_count/$MAX_RETRIES)"
+                        
+                        # 如果是最后一次尝试仍然失败，则记录最终错误
+                        if [ $retry_count -eq $MAX_RETRIES ]; then
+                            log_error "已达到最大重试次数 ($MAX_RETRIES)，放弃尝试并进入下一环节"
+                        else
+                            # 等待几秒后重试（避免立即重试）
+                            sleep 3
+                        fi
+                    else
+                        backup_success=true
+                        log_info "压缩文件创建成功: $(du -h "$backup_path" | cut -f1)"
+                    fi
+                done
 
-while [ $retry_count -lt $MAX_RETRIES ] && [ "$backup_success" = false ]; do
-    # 尝试压缩数据目录
-    tar -czf "$backup_path" -C "$DATA_DIR" .
-    
-    if [ $? -ne 0 ]; then
-        retry_count=$((retry_count + 1))
-        log_error "创建压缩文件失败 (尝试 $retry_count/$MAX_RETRIES)"
-        
-        # 如果是最后一次尝试仍然失败，则记录最终错误
-        if [ $retry_count -eq $MAX_RETRIES ]; then
-            log_error "已达到最大重试次数 ($MAX_RETRIES)，放弃尝试并进入下一环节"
-        else
-            # 等待几秒后重试（避免立即重试）
-            sleep 3
-        fi
-    else
-        backup_success=true
-        log_info "压缩文件创建成功: $(du -h "$backup_path" | cut -f1)"
-    fi
-done
-
-# 后续逻辑（无论成功或失败都会继续执行）
-if [ "$backup_success" = true ]; then
-    log_info "备份成功，继续后续操作..."
-else
-    log_error "备份失败，但仍继续后续操作..."
-fi                    
+                # 只有备份成功时才上传
+                if [ "$backup_success" = true ]; then
+                    log_info "备份成功，准备上传..."
                     # 上传备份
                     log_info "正在上传备份到HuggingFace..."
                     upload_backup "$backup_path" "$backup_file"
@@ -385,6 +387,8 @@ fi
                     # 删除临时备份文件
                     rm -f "$backup_path"
                     log_info "已删除临时备份文件"
+                else
+                    log_error "备份失败，跳过上传步骤"
                 fi
             fi
         else
