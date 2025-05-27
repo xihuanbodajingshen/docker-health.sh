@@ -163,7 +163,7 @@ import sys
 import os
 import time
 
-def manage_backups(api, repo_id, max_files=5):
+def manage_backups(api, repo_id, max_files=10):
     try:
         files = api.list_repo_files(repo_id=repo_id, repo_type='dataset')
         backup_files = [f for f in files if f.startswith('sillytavern_backup_') and f.endswith('.tar.gz')]
